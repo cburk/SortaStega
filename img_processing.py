@@ -50,8 +50,8 @@ def plausibleRectangles(contours):
 
 # returns true if the pixel at x,y in the image img is somewhere between a dark grey and full black
 def isPixelMostlyBlack(image, xy):
-    pixel = image[xy[0]][xy[1]]
-
+    pixel = image[xy[1]][xy[0]]
+    image[xy[0]][xy[0]] = (255, 0, 0)
     #print("This one black? " + str(ma.masked_where(pixel > 50, pixel).count() == 0))
     
     # Make sure the rgb values are minimal
@@ -70,19 +70,6 @@ posSquares = plausibleRectangles(contours)
 posSquares = [numpy.int0(cv2.boxPoints(cv2.minAreaRect(shape))) for shape in posSquares]
 rectangleIdToCorners = {id: posSquares[id] for id in range(len(posSquares))}    
 
-"""
-print("Keys?")
-i = 0
-for id in rectangleIdToCorners.keys():
-    print("ID!:" + str(id))
-    print(rectangleIdToCorners[id])
-    print(img_geometry.getPointsInRectangle(rectangleIdToCorners[id]))
-    i += 1
-    if i == 20:
-        break
-1/0
-"""
-
 interiorPixels = {id: img_geometry.getPointsInRectangle(rectangleIdToCorners[id]) for id in rectangleIdToCorners}  # The interior pixels of each rectangle in posSquares are stored at the same index in this array
 
 # Drop any that have no interiors, otherwise % calculations would be invalid
@@ -97,31 +84,22 @@ for id in pixelCounts:
 interiorPixels = newInteriorPixels
 pixelCounts = newPixelCounts
 
-# Get the number of pixels that are black
-pixelsBlackCount = {id: [[isPixelMostlyBlack(image, pixel) for pixel in interiorPixels[id]].count(True), pixelCounts[id]] for id in interiorPixels}
-
-print('pBC')
-print(pixelsBlackCount)
-print(sorted(pixelsBlackCount, key=lambda ind: pixelsBlackCount[ind][1])[-5:])
-#1/0
-
+# TODO: Just for testing, remove
 print('most internals ids: ')
 mostIds = sorted(pixelCounts, key=lambda ind: pixelCounts[ind])[-5:]
 print(mostIds)
 majorCoords = [rectangleIdToCorners[id] for id in mostIds]
-print(majorCoords)
 
+
+# Get the number of pixels that are black
+#pixelsBlackCount = {id: [[isPixelMostlyBlack(image, pixel) for pixel in interiorPixels[id]].count(True), pixelCounts[id]] for id in interiorPixels}
+pixelsBlackCount = [[isPixelMostlyBlack(image, pixel) for pixel in interiorPixels[id]].count(True) for id in mostIds]
+print("Black count for these vs num pixels total")
+print(pixelsBlackCount)
+print([pixelCounts[id] for id in mostIds])
 
 # Only take the shapes that are almost all black
 #posSquares = [rectangleIdToCorners[id] for id in pixelCounts if float(pixelsBlackCount[id][0])/float(pixelCounts[id]) > .5]
-posSquares = [rectangleIdToCorners[id] for id in pixelsBlackCount]
-
-#print("Interiors found: ")
-#print(interiorPixels[0])
-#print(interiorPixels[3])
-#print(interiorPixels[6])
-
-#posSquares = isPixelMostlyBlack()
 
 """
 print("Original points:")
