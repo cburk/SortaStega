@@ -109,69 +109,70 @@ def pointBetweenParallelLines(line_one, line_two, pt):
 	Applicable to image processing, where this function returns the coordinates of all the pixels w/in a rectangle
 """
 def getPointsInRectangle(coords_list):
-	print("Getting rectangle points, coords passed in: " + str(coords_list))
-        # This function doesn't work on numpy arrays.  Could have a TODO: where we make a numpy specific version
-        if getattr(coords_list, 'tolist', None):
-            coords_list = coords_list.tolist()
+    #print("Getting rectangle points, coords passed in: " + str(coords_list))
+    # This function doesn't work on numpy arrays.  Could have a TODO: where we make a numpy specific version
+    if getattr(coords_list, 'tolist', None):
+        coords_list = coords_list.tolist()
 
-        # If the rectangle specified is just a line (i.e. two sets of corners are the same) return an empty array
-        if DuplicatePoints(coords_list):
-            return []
-	
-	# Get the points farthest left, right, up, and down
-	max_x = max([xy[0] for xy in coords_list])
-	max_y = max([xy[1] for xy in coords_list])
-	min_x = min([xy[0] for xy in coords_list])
-	min_y = min([xy[1] for xy in coords_list])
-	
-	print("Mins: " + str(min_x) + ',' + str(min_y))
-	print("maxs: " + str(max_x) + ',' + str(max_y))
-	
-	# Get two points opposite each other on the rectangle
-	corner, opposite_corner = getOppositeRectangleCorners(coords_list)
-	other_opposites = [pt for pt in coords_list if not pt in [corner, opposite_corner]]
-	
-	# Get all 4 outside lines, group parallel lines
-	side_one = [corner, other_opposites[0]]
-	side_two = [opposite_corner, other_opposites[1]]
-	parallel_line_segments_one_pts = [side_one, side_two]
-	
-	side_three = [corner, other_opposites[1]]
-	side_four = [opposite_corner, other_opposites[0]]
-	parallel_line_segments_two_pts = [side_three, side_four]
-	
-	# Get the constants of each line
-	side_one_defn = getLineBetween(side_one[0], side_one[1])
-	side_two_defn = getLineBetween(side_two[0], side_two[1])
-	parallel_line_segments_one = [side_one_defn, side_two_defn]
-	
-	print("b is the same for both, right? " + str(side_one_defn['a']) + ',' + str(side_two_defn['a']))
-	
-	side_three_defn = getLineBetween(side_three[0], side_three[1])
-	side_four_defn = getLineBetween(side_four[0], side_four[1])
-	parallel_line_segments_two = [side_three_defn, side_four_defn]
+    # If the rectangle specified is just a line (i.e. two sets of corners are the same) return an empty array
+    if DuplicatePoints(coords_list):
+        return []
+        
+    # Get the points farthest left, right, up, and down
+    max_x = max([xy[0] for xy in coords_list])
+    max_y = max([xy[1] for xy in coords_list])
+    min_x = min([xy[0] for xy in coords_list])
+    min_y = min([xy[1] for xy in coords_list])
+        
+    #print("Mins: " + str(min_x) + ',' + str(min_y))
+    #print("maxs: " + str(max_x) + ',' + str(max_y))
+        
+    # Get two points opposite each other on the rectangle
+    corner, opposite_corner = getOppositeRectangleCorners(coords_list)
+    other_opposites = [pt for pt in coords_list if not pt in [corner, opposite_corner]]
+        
+    # Get all 4 outside lines, group parallel lines
+    side_one = [corner, other_opposites[0]]
+    side_two = [opposite_corner, other_opposites[1]]
+    parallel_line_segments_one_pts = [side_one, side_two]
+        
+    side_three = [corner, other_opposites[1]]
+    side_four = [opposite_corner, other_opposites[0]]
+    parallel_line_segments_two_pts = [side_three, side_four]
+        
+    # Get the constants of each line
+    side_one_defn = getLineBetween(side_one[0], side_one[1])
+    side_two_defn = getLineBetween(side_two[0], side_two[1])
+    parallel_line_segments_one = [side_one_defn, side_two_defn]
+        
+    #print("b is the same for both, right? " + str(side_one_defn['a']) + ',' + str(side_two_defn['a']))
+        
+    side_three_defn = getLineBetween(side_three[0], side_three[1])
+    side_four_defn = getLineBetween(side_four[0], side_four[1])
+    parallel_line_segments_two = [side_three_defn, side_four_defn]
 
-	print("b is the same for both, right? " + str(side_three_defn['a']) + ',' + str(side_four_defn['a']))
+    #print("b is the same for both, right? " + str(side_three_defn['a']) + ',' + str(side_four_defn['a']))
 
-	# To be w/in the confines of the
-	results = []
-	for x in range(min_x, max_x):
-		for y in range(min_y, max_y):
-			point = [x, y]
-			if pointBetweenParallelLines(parallel_line_segments_one[0], parallel_line_segments_one[1], point) and pointBetweenParallelLines(parallel_line_segments_two[0], parallel_line_segments_two[1], point):
-				results.append(point)
+    # To be w/in the confines of the
+    results = []
+    for x in range(min_x, max_x):
+        for y in range(min_y, max_y):
+            point = [x, y]
+            if pointBetweenParallelLines(parallel_line_segments_one[0], parallel_line_segments_one[1], point) and pointBetweenParallelLines(parallel_line_segments_two[0], parallel_line_segments_two[1], point):
+                results.append(point)
 
-	return results
+    return results
 
 
 """
 Tests
 """
 #res = getPointsInRectangle([[0,0], [2,0], [1,6], [3,6]])
+"""
 res = getPointsInRectangle([[1,0], [0,3], [3,1], [2,4]])
-print "Getting points:"
-print res
-print "points get got:"
+print("Getting points:")
+print(res)
+print("points get got:")
 
 def testLineWorksCorrectly():
 	res = getLineBetween([2,1], [6, 3])
@@ -181,3 +182,5 @@ def testLineWorksCorrectly():
 
 
 testLineWorksCorrectly()
+
+"""

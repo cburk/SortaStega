@@ -1,4 +1,5 @@
 import numpy
+import numpy.ma as ma
 import cv2
 import img_geometry
 
@@ -47,6 +48,18 @@ def plausibleRectangles(contours):
 
 # Min distance between original shape and enclosing rect?  I.e. most rectangle like shapes?
 
+# returns true if the pixel at x,y in the image img is somewhere between a dark grey and full black
+def isPixelMostlyBlack(image, xy):
+    pixel = image[xy[0]][xy[1]]
+
+    #print("This one black? " + str(ma.masked_where(pixel > 50, pixel).count() == 0))
+    
+    # Make sure the rgb values are minimal
+    #return ma.masked_where(pixel > 50, pixel).count() == 0
+
+    pixel = pixel.tolist()
+    return pixel[0] < 50 and pixel[1] < 50 and pixel[2] < 50
+
 """
 Finding the blacked out boxes
 """
@@ -55,18 +68,60 @@ posSquares = plausibleRectangles(contours)
 
 # Get the corners of a rectangle enclosing each remaining shape
 posSquares = [numpy.int0(cv2.boxPoints(cv2.minAreaRect(shape))) for shape in posSquares]
-rectangleIdToCorners = {id: posSquares[id] for id in range(len(posSquares))}
+rectangleIdToCorners = {id: posSquares[id] for id in range(len(posSquares))}    
 
-# Ignore any rectangles that aren't mostly black
+"""
+print("Keys?")
+i = 0
+for id in rectangleIdToCorners.keys():
+    print("ID!:" + str(id))
+    print(rectangleIdToCorners[id])
+    print(img_geometry.getPointsInRectangle(rectangleIdToCorners[id]))
+    i += 1
+    if i == 20:
+        break
+1/0
+"""
+
 interiorPixels = {id: img_geometry.getPointsInRectangle(rectangleIdToCorners[id]) for id in rectangleIdToCorners}  # The interior pixels of each rectangle in posSquares are stored at the same index in this array
-# TODO: Drop any that have no interiors, otherwise % calculations would be invalid
+
+# Drop any that have no interiors, otherwise % calculations would be invalid
+pixelCounts = {id: len(interiorPixels[id]) for id in interiorPixels}
+
+newInteriorPixels = {}
+newPixelCounts = {}
+for id in pixelCounts:
+    if pixelCounts[id] != 0:
+        newPixelCounts[id] = pixelCounts[id]
+        newInteriorPixels[id] = interiorPixels[id]
+interiorPixels = newInteriorPixels
+pixelCounts = newPixelCounts
+
+# Get the number of pixels that are black
+pixelsBlackCount = {id: [[isPixelMostlyBlack(image, pixel) for pixel in interiorPixels[id]].count(True), pixelCounts[id]] for id in interiorPixels}
+
+print('pBC')
+print(pixelsBlackCount)
+print(sorted(pixelsBlackCount, key=lambda ind: pixelsBlackCount[ind][1])[-5:])
+#1/0
+
+print('most internals ids: ')
+mostIds = sorted(pixelCounts, key=lambda ind: pixelCounts[ind])[-5:]
+print(mostIds)
+majorCoords = [rectangleIdToCorners[id] for id in mostIds]
+print(majorCoords)
+
+
+# Only take the shapes that are almost all black
+#posSquares = [rectangleIdToCorners[id] for id in pixelCounts if float(pixelsBlackCount[id][0])/float(pixelCounts[id]) > .5]
+posSquares = [rectangleIdToCorners[id] for id in pixelsBlackCount]
 
 #print("Interiors found: ")
 #print(interiorPixels[0])
 #print(interiorPixels[3])
 #print(interiorPixels[6])
 
-#posSquares = pixelMostlyBlack()
+#posSquares = isPixelMostlyBlack()
 
 """
 print("Original points:")
@@ -82,7 +137,8 @@ box = numpy.int0(box)
 """
 
 #cv2.drawContours(image,[box],0,(0,255,0),2)
-cv2.drawContours(image, posSquares, -1, (0,255,0), 2)
+#cv2.drawContours(image, posSquares, -1, (0,255,0), 2)
+cv2.drawContours(image, majorCoords, -1, (0,255,0), 2)
 cv2.imshow("objects Found", image)
 
 cv2.waitKey(0)
