@@ -109,8 +109,27 @@ more natural by adding angle.  That's what all todo's in this section represent
 # Slightly up from the bottom of each bar
 font = cv2.FONT_HERSHEY_SIMPLEX
 censor_bar_height = max([xy[1] for xy in majorCoords[0]]) - min([xy[1] for xy in majorCoords[0]])
-for leftCorner in [(min([xy[0] for xy in coords_list]), numpy.int0(max([xy[1] for xy in coords_list]) - (.3*censor_bar_height))) for coords_list in majorCoords]:
-    cv2.putText(image, "HelloWorld", leftCorner, font, .5, (200, 200, 200))
+bar_widths = [max([xy[0] for xy in coords]) - min([xy[0] for xy in coords]) for coords in majorCoords]
+relative_bar_widths = [float(width) / censor_bar_height for width in bar_widths]
+
+print("Relative widths: " + str(relative_bar_widths))
+
+# TODO: Get from db maybe?
+width_to_phrase_mapping = {2.0: "Shorty", 8.218181818181818: "Lil Biggie", 8.654545454545455: "Lil Bigger", 9.772727272727273: "Biggie"}
+
+for ind in range(len(majorCoords)):
+    coords_list = majorCoords[ind]
+    left_corner = (min([xy[0] for xy in coords_list]), numpy.int0(max([xy[1] for xy in coords_list]) - (.3*censor_bar_height)))
+
+    # Find the word associated w/ this bar (by finding key closest to this bar's width : heighth ratio)
+    width = relative_bar_widths[ind]
+    closest_width = sorted(width_to_phrase_mapping, key=lambda map_width: abs(map_width - width))[0]
+    censored_phrase = width_to_phrase_mapping[closest_width]
+    # Remove the used key from the mapping so that if another is closeish it won't take a previously used phrase.
+    # It just provides a better chance of this approach being correct is all
+    del width_to_phrase_mapping[closest_width]
+    
+    cv2.putText(image, censored_phrase, left_corner, font, .5, (200, 200, 200))
 
 # TODO: Rotate text image to angle specified(long side)
 
