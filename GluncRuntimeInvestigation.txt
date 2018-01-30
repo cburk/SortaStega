@@ -1,0 +1,2 @@
+Why is Glunc w/ id: 569 taking longer and longer to run each time (originally <1min, now ~5min)?
+

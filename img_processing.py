@@ -84,9 +84,8 @@ for id in pixelCounts:
 interiorPixels = newInteriorPixels
 pixelCounts = newPixelCounts
 
-# TODO: Just for testing, remove
-print('most internals ids: ')
-mostIds = sorted(pixelCounts, key=lambda ind: pixelCounts[ind])[-5:]
+# TODO: change to get more
+mostIds = sorted(pixelCounts, key=lambda ind: pixelCounts[ind])[-4:]
 print(mostIds)
 majorCoords = [rectangleIdToCorners[id] for id in mostIds]
 
@@ -97,6 +96,23 @@ pixelsBlackCount = [[isPixelMostlyBlack(image, pixel) for pixel in interiorPixel
 print("Black count for these vs num pixels total")
 print(pixelsBlackCount)
 print([pixelCounts[id] for id in mostIds])
+
+"""
+Draw text on the correct rectangles
+TODO: Maybe one day make the Censor bars (https://en.wikipedia.org/wiki/Censor_bars) look
+more natural by adding angle.  That's what all todo's in this section represent
+"""
+# TODO: Put text on blank image
+# Write text on top of each censor bar
+# This version starts at the bottom left of each bar, in future should account for angled bars
+# The bottom left is the min x coord and the MAX y coord (0 is top, max is bottom) and moves the text up just
+# Slightly up from the bottom of each bar
+font = cv2.FONT_HERSHEY_SIMPLEX
+censor_bar_height = max([xy[1] for xy in majorCoords[0]]) - min([xy[1] for xy in majorCoords[0]])
+for leftCorner in [(min([xy[0] for xy in coords_list]), numpy.int0(max([xy[1] for xy in coords_list]) - (.3*censor_bar_height))) for coords_list in majorCoords]:
+    cv2.putText(image, "HelloWorld", leftCorner, font, .5, (200, 200, 200))
+
+# TODO: Rotate text image to angle specified(long side)
 
 # Only take the shapes that are almost all black
 #posSquares = [rectangleIdToCorners[id] for id in pixelCounts if float(pixelsBlackCount[id][0])/float(pixelCounts[id]) > .5]
